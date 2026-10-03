@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Motorsport Tracker</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+    --bg:#080a0f;
+    --card:#10141c;
+    --card2:#141923;
+    --accent:#35c8ff;
+    --red:#ff365d;
+    --text:#f5f7fb;
+    --muted:#8e98a8;
+    --line:rgba(255,255,255,.08);
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    background:
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+        var(--bg);
+    background-size:40px 40px;
+    color:var(--text);
+    font-family:Inter,sans-serif;
+    min-height:100vh;
+}
+
+body:before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+        radial-gradient(circle at 15% 10%,rgba(53,200,255,.08),transparent 28%),
+        radial-gradient(circle at 85% 20%,rgba(255,54,93,.06),transparent 25%);
+}
+
+button{
+    font-family:inherit;
+}
+
+header{
+    position:sticky;
+    top:0;
+    z-index:100;
+    backdrop-filter:blur(16px);
+    background:rgba(8,10,15,.88);
+    border-bottom:1px solid var(--line);
+}
+
+.header-inner{
+    max-width:1450px;
+    margin:auto;
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:25px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.logo{
+    width:48px;
+    height:48px;
+    display:grid;
+    place-items:center;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:Orbitron,sans-serif;
+    font-weight:800;
+    border-radius:10px;
+    box-shadow:0 0 22px rgba(53,200,255,.12);
+}
+
+.brand h1{
+    font-family:Orbitron,sans-serif;
+    font-size:18px;
+    letter-spacing:1px;
+}
+
+.brand span{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:1.5px;
+}
+
+.nav{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
+.nav button{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--line);
+    padding:9px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.8px;
+    transition:.2s;
+}
+
+.nav button:hover,
+.nav button.active{
+    color:#fff;
+    border-color:var(--accent);
+    background:rgba(53,200,255,.08);
+}
+
+main{
+    max-width:1450px;
+    margin:auto;
+    padding:55px 28px 80px;
+}
+
+.hero{
+    display:grid;
+    grid-template-columns:1.4fr .6fr;
+    gap:25px;
+    margin-bottom:30px;
+}
+
+.hero-main{
+    padding:42px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:linear-gradient(135deg,rgba(53,200,255,.05),rgba(255,54,93,.03));
+}
+
+.hero-tag{
+    color:var(--accent);
+    font-family:Orbitron,sans-serif;
+    font-size:11px;
+    letter-spacing:2px;
+    font-weight:800;
+    margin-bottom:18px;
+}
+
+.hero h2{
+    font-family:Orbitron,sans-serif;
+    font-size:clamp(38px,6vw,76px);
+    line-height:.98;
+    letter-spacing:-2px;
+}
+
+.hero h2 span{
+    color:var(--accent);
+}
+
+.hero p{
+    color:var(--muted);
+    max-width:700px;
+    margin-top:22px;
+    line-height:1.7;
+}
+
+.hero-side{
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:var(--card);
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.current-series{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:2px;
+    font-weight:800;
+}
+
+.series-big{
+    font-family:Orbitron,sans-serif;
+    font-size:42px;
+    margin-top:8px;
+}
+
+.update{
+    margin-top:25px;
+    width:100%;
+    border:1px solid var(--accent);
+    color:#fff;
+    background:rgba(53,200,255,.08);
+    border-radius:10px;
+    padding:13px 16px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.update:hover{
+    background:var(--accent);
+    color:#061018;
+}
+
+.update:disabled{
+    opacity:.6;
+    cursor:wait;
+}
+
+.sync-time{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:9px;
+    text-align:center;
+    letter-spacing:.5px;
+}
+
+.series-page{
+    display:none;
+}
+
+.series-page.active{
+    display:block;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(12,1fr);
+    gap:18px;
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px;
+    overflow:hidden;
+}
+
+.card-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.card-title h3{
+    font-family:Orbitron,sans-serif;
+    font-size:12px;
+    letter-spacing:1.4px;
+}
+
+.card-title span{
+    color:var(--muted);
+    font-size:10px;
+}
+
+.sessions-card{
+    grid-column:1/-1;
+}
+
+.session-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:12px;
+}
+
+.session-box{
+    background:var(--card2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    min-height:180px;
+}
+
+.session-label{
+    font-family:Orbitron,sans-serif;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1px;
+    margin-bottom:15px;
+}
+
+.session-result{
+    display:grid;
+    grid-template-columns:30px 1fr auto;
+    align-items:center;
+    gap:6px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+}
+
+.session-result:last-child{
+    border-bottom:none;
+}
+
+.session-pos{
+    color:var(--accent);
+    font-size:10px;
+    font-weight:800;
+}
+
+.session-driver{
+    font-size:11px;
+    font-weight:700;
+}
+
+.session-time{
+    color:var(--muted);
+    font-size:10px;
+    white-space:nowrap;
+}
+
+.session-upcoming{
+    opacity:.75;
+}
+
+.pole-box{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.pole-box .session-driver{
+    font-family:Orbitron,sans-serif;
+    font-size:16px;
+    margin-bottom:6px;
+}
+
+.last-race{
+    grid-column:span 4;
+}
+
+.next-event{
+    grid-column:span 4;
+}
+
+.championship{
+    grid-column:span 4;
+}
+
+.results-card{
+    grid-column:span 6;
+}
+
+.standings-card{
+    grid-column:span 6;
+}
+
+.stat{
+    margin-bottom:18px;
+}
+
+.stat-label{
+    color:var(--muted);
+    font-size:10px;
+    letter-spacing:1.5px;
+    font-weight:800;
+}
+
+.stat-value{
+    font-family:Orbitron,sans-serif;
+    font-size:24px;
+    margin-top:6px;
+}
+
+.event-name{
+    font-family:Orbitron,sans-serif;
+    font-size:24px;
+    line-height:1.2;
+    margin-bottom:10px;
+}
+
+.event-info{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.7;
+}
+
+.podium{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    margin-top:20px;
+}
+
+.podium-item{
+    background:var(--card2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:13px 9px;
+    text-align:center;
+}
+
+.podium-pos{
+    font-family:Orbitron,sans-serif;
+    color:var(--accent);
+    font-size:11px;
+    font-weight:800;
+}
+
+.podium-name{
+    font-size:11px;
+    font-weight:800;
+    margin-top:6px;
+}
+
+.podium-team{
+    color:var(--muted);
+    font-size:9px;
+    margin-top:4px;
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table th{
+    color:var(--muted);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    text-align:left;
+    padding:9px 7px;
+    border-bottom:1px solid var(--line);
+}
+
+.table td{
+    padding:11px 7px;
+    font-size:11px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.table tr:last-child td{
+    border-bottom:none;
+}
+
+.pos{
+    color:var(--accent);
+    font-family:Orbitron,sans-serif;
+    font-weight:800;
+}
+
+.points{
+    font-weight:800;
+}
+
+.fastest{
+    grid-column:span 4;
+}
+
+.secondary{
+    grid-column:span 4;
+}
+
+.about{
+    grid-column:span 4;
+}
+
+.highlight{
+    font-family:Orbitron,sans-serif;
+    color:var(--accent);
+    font-size:28px;
+}
+
+.muted{
+    color:var(--muted);
+}
+
+.status{
+    display:inline-block;
+    margin-top:12px;
+    padding:6px 9px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:9px;
+    font-weight:800;
+    color:var(--muted);
+}
+
+.status.live{
+    color:var(--accent);
+    border-color:rgba(53,200,255,.35);
+}
+
+.status.ok{
+    color:#62ffad;
+    border-color:rgba(98,255,173,.35);
+}
+
+.status.error{
+    color:var(--red);
+    border-color:rgba(255,54,93,.35);
+}
+
+.manual-note{
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.7;
+}
+
+.data-date{
+    color:var(--accent);
+    font-family:Orbitron,sans-serif;
+    font-size:11px;
+    margin-top:10px;
+}
+
+footer{
+    max-width:1450px;
+    margin:auto;
+    padding:0 28px 40px;
+    color:var(--muted);
+    font-size:10px;
+    text-align:center;
+}
+
+@media(max-width:1100px){
+
+    .hero{
+        grid-template-columns:1fr;
+    }
+
+    .session-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .last-race,
+    .next-event,
+    .championship,
+    .results-card,
+    .standings-card,
+    .fastest,
+    .secondary,
+    .about{
+        grid-column:span 6;
+    }
+}
+
+@media(max-width:700px){
+
+    .header-inner{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .nav{
+        justify-content:flex-start;
+    }
+
+    main{
+        padding:30px 15px 60px;
+    }
+
+    .hero-main{
+        padding:28px;
+    }
+
+    .hero h2{
+        font-size:42px;
+    }
+
+    .session-grid{
+        grid-template-columns:1fr;
+    }
+
+    .last-race,
+    .next-event,
+    .championship,
+    .results-card,
+    .standings-card,
+    .fastest,
+    .secondary,
+    .about{
+        grid-column:1/-1;
+    }
+
+    .podium{
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="header-inner">
+
+<div class="brand">
+
+<div class="logo">MT</div>
+
+<div>
+<h1>MOTORSPORT TRACKER</h1>
+<span>F1 • F2 • F3 • MOTOGP • WEC</span>
+</div>
+
+</div>
+
+<div class="nav">
+
+<button class="active" onclick="showSeries('f1',this)">F1</button>
+<button onclick="showSeries('f2',this)">F2</button>
+<button onclick="showSeries('f3',this)">F3</button>
+<button onclick="showSeries('motogp',this)">MOTOGP</button>
+<button onclick="showSeries('wec',this)">WEC</button>
+
+</div>
+
+</div>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+<div class="hero-main">
+
+<div class="hero-tag">2026 SEASON</div>
+
+<h2>
+ONE PLACE.<br>
+<span>EVERY RACE.</span>
+</h2>
+
+<p>
+Championship standings, race results, session results,
+fastest laps and upcoming events — all in one motorsport dashboard.
+</p>
+
+</div>
+
+<div class="hero-side">
+
+<div>
+
+<div class="current-series">
+CURRENT SERIES
+</div>
+
+<div class="series-big" id="heroSeries">
+F1
+</div>
+
+</div>
+
+<button
+class="update"
+id="heroUpdate"
+onclick="updateSeries('f1')"
+>
+↻ UPDATE F1
+</button>
+
+<div class="sync-time" id="syncTime">
+LAST REFRESH: —
+</div>
+
+</div>
+
+</section>
+
+
+<div id="pages"></div>
+
+</main>
+
+
+<footer>
+MOTORSPORT TRACKER • 2026 SEASON • MANUAL DATA MODE
+</footer>
+
+
+<script>
+
+/*
+===========================================================
+MOTORSPORT TRACKER
+MANUAL DATA MODE
+===========================================================
+
+When a new race/event happens, edit the SERIES DATA below.
+
+No API.
+No live feed.
+No automatic guessing.
+
+===========================================================
+*/
+
+
+/* =========================================================
+   SERIES DATA
+========================================================= */
+
+const seriesData = {
+
+    f1: {
+
+        name: "F1",
+
+        weekendLabel: "BAHRAIN GP • IN MALAYSIA",
+
+        lastUpdated: "03 October 2026",
+
+        sessions: {
+
+            FP1: [
+                ["Max Verstappen","1:37.520"],
+                ["George Russell","+0.383s"],
+                ["Isack Hadjar","+0.783s"]
+            ],
+
+            FP2: [
+                ["Charles Leclerc","1:37.528"],
+                ["Isack Hadjar","+0.099s"],
+                ["Lando Norris","+0.137s"]
+            ],
+
+            FP3: [
+                ["Kimi Antonelli","1:36.302"],
+                ["Max Verstappen","+0.278s"],
+                ["Isack Hadjar","+0.558s"]
+            ],
+
+            QUALIFYING: [
+                ["Max Verstappen","1:35.130"],
+                ["Lewis Hamilton","1:35.428"],
+                ["Isack Hadjar","1:35.558"]
+            ],
+
+            POLE: {
+                driver:"Max Verstappen",
+                time:"1:35.130"
+            }
+
+        },
+
+        lastRace: {
+
+            name:"AZERBAIJAN GP",
+
+            info:"Baku City Circuit<br>24–26 September 2026",
+
+            round:"ROUND 15",
+
+            podium:[
+
+                ["George Russell","Mercedes"],
+                ["Max Verstappen","Red Bull Racing"],
+                ["Isack Hadjar","Red Bull Racing"]
+
+            ]
+
+        },
+
+        nextEvent: {
+
+            title:"CURRENT EVENT",
+
+            name:"BAHRAIN GP • IN MALAYSIA",
+
+            info:"Sepang International Circuit<br>02–04 October 2026",
+
+            round:"ROUND 16",
+
+            status:"WEEKEND ACTIVE"
+
+        },
+
+        championship: {
+
+            leader:"Kimi Antonelli",
+
+            points:"302 PTS"
+
+        },
+
+        standings:[
+
+            ["Kimi Antonelli","Mercedes","302"],
+            ["George Russell","Mercedes","236"],
+            ["Lewis Hamilton","Mercedes","199"],
+            ["Lando Norris","McLaren","186"],
+            ["Charles Leclerc","Ferrari","179"],
+            ["Max Verstappen","Red Bull Racing","163"],
+            ["Oscar Piastri","McLaren","120"],
+            ["Isack Hadjar","Red Bull Racing","86"],
+            ["Liam Lawson","Racing Bulls","59"],
+            ["Pierre Gasly","Alpine","41"]
+
+        ],
+
+        results:[
+
+            ["George Russell","25"],
+            ["Max Verstappen","18"],
+            ["Isack Hadjar","15"],
+            ["Charles Leclerc","12"],
+            ["Lando Norris","10"]
+
+        ],
+
+        fastest: {
+
+            event:"AZERBAIJAN GP",
+
+            driver:"George Russell",
+
+            time:"1:44.916",
+
+            team:"Mercedes • Lap 49"
+
+        },
+
+        secondary: {
+
+            label:"LAST RACE WINNER",
+
+            title:"George Russell",
+
+            subtitle:"Mercedes • P1"
+
+        }
+
+    },
+
+
+    f2: {
+
+        name:"F2",
+
+        weekendLabel:"BAKU • ROUND 11",
+
+        lastUpdated:"03 October 2026",
+
+        sessions: {
+
+            FP1:[
+                ["Rafael Câmara","—"],
+                ["Nikola Tsolov","—"],
+                ["Alexander Dunne","—"]
+            ],
+
+            FP2:[
+                ["Rafael Câmara","—"],
+                ["Nikola Tsolov","—"],
+                ["Alexander Dunne","—"]
+            ],
+
+            FP3:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            QUALIFYING:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            POLE:{
+                driver:"UPCOMING",
+                time:"Qualifying result"
+            }
+
+        },
+
+        lastRace:{
+
+            name:"AZERBAIJAN",
+
+            info:"Baku City Circuit<br>24–26 September 2026",
+
+            round:"ROUND 11",
+
+            podium:[
+                ["Rafael Câmara","—"],
+                ["Nikola Tsolov","—"],
+                ["Alexander Dunne","—"]
+            ]
+
+        },
+
+        nextEvent:{
+
+            title:"NEXT EVENT",
+
+            name:"LUSAIL",
+
+            info:"Lusail International Circuit<br>27–29 November 2026",
+
+            round:"ROUND 12",
+
+            status:"UPCOMING"
+
+        },
+
+        championship:{
+
+            leader:"Rafael Câmara",
+
+            points:"207 PTS"
+
+        },
+
+        standings:[
+
+    ["Rafael Câmara","Invicta Racing","207"],
+    ["Nikola Tsolov","Campos Racing","200"],
+    ["Alexander Dunne","Rodin Motorsport","189"],
+    ["Gabriele Minì","MP Motorsport","163"],
+    ["Dino Beganovic","DAMS Lucas Oil","137"],
+    ["Noel León","Campos Racing","133"],
+    ["Martinius Stenshorne","Rodin Motorsport","107"],
+    ["Joshua Dürksen","Invicta Racing","90"],
+    ["Kush Maini","ART Grand Prix","90"],
+    ["Laurens van Hoepen","TRIDENT","90"]
+
+],
+        results:[
+
+            ["Rafael Câmara","25"],
+            ["Nikola Tsolov","19"],
+            ["Alexander Dunne","15"],
+            ["Gabriele Minì","8"],
+            ["Dino Beganovic","6"]
+
+        ],
+
+        fastest:{
+
+            event:"AZERBAIJAN",
+
+            driver:"NOT ADDED",
+
+            time:"—",
+
+            team:"Add fastest lap after update"
+
+        },
+
+        secondary:{
+
+            label:"LAST RACE WINNER",
+
+            title:"Rafael Câmara",
+
+            subtitle:"P1"
+
+        }
+
+    },
+
+
+    f3: {
+
+        name:"F3",
+
+        weekendLabel:"MADRID • FINAL ROUND",
+
+        lastUpdated:"03 October 2026",
+
+        sessions:{
+
+            FP1:[
+                ["Ugo Ugochukwu","—"],
+                ["Freddie Slater","—"],
+                ["Tuukka Taponen","—"]
+            ],
+
+            FP2:[
+                ["Ugo Ugochukwu","—"],
+                ["Freddie Slater","—"],
+                ["Tuukka Taponen","—"]
+            ],
+
+            FP3:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            QUALIFYING:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            POLE:{
+                driver:"UPCOMING",
+                time:"Qualifying result"
+            }
+
+        },
+
+        lastRace:{
+
+            name:"MADRID",
+
+            info:"Madring<br>11–13 September 2026",
+
+            round:"FINAL ROUND",
+
+            podium:[
+                ["Ugo Ugochukwu","Campos Racing"],
+                ["Freddie Slater","—"],
+                ["Tuukka Taponen","—"]
+            ]
+
+        },
+
+        nextEvent:{
+
+            title:"SEASON STATUS",
+
+            name:"CHAMPION",
+
+            info:"Ugo Ugochukwu<br>Campos Racing",
+
+            round:"2026",
+
+            status:"SEASON COMPLETE"
+
+        },
+
+        championship:{
+
+            leader:"Ugo Ugochukwu",
+
+            points:"159 PTS"
+
+        },
+
+       standings:[
+
+    ["Ugo Ugochukwu","Campos Racing","159"],
+    ["Freddie Slater","TRIDENT","145"],
+    ["Tuukka Taponen","MP Motorsport","109"],
+    ["Taito Kato","ART Grand Prix","105"],
+    ["Théophile Naël","Campos Racing","88"],
+    ["Pedro Clerot","Rodin Motorsport","88"],
+    ["Enzo Rivera","Campos Racing","87"],
+    ["Brando Badoer","Rodin Motorsport","71"],
+    ["Hiyu Yamakoshi","Van Amersfoort Racing","71"],
+    ["Noah Strømsted","TRIDENT","65"]
+
+],
+        results:[
+
+            ["Ugo Ugochukwu","25"],
+            ["Freddie Slater","18"],
+            ["Tuukka Taponen","15"],
+            ["Enzo Deligny","12"],
+            ["Tadasuke Makino","10"]
+
+        ],
+
+        fastest:{
+
+            event:"MADRID",
+
+            driver:"NOT ADDED",
+
+            time:"—",
+
+            team:"Add fastest lap"
+
+        },
+
+        secondary:{
+
+            label:"CHAMPION",
+
+            title:"Ugo Ugochukwu",
+
+            subtitle:"159 PTS"
+
+        }
+
+    },
+
+
+    motogp: {
+
+        name:"MOTOGP",
+
+        weekendLabel:"JAPAN GP • MOTEGI",
+
+        lastUpdated:"03 October 2026",
+
+        sessions:{
+
+            FP1:[
+                ["Pedro Acosta","—"],
+                ["Jorge Martín","—"],
+                ["Marco Bezzecchi","—"]
+            ],
+
+            FP2:[
+                ["Marco Bezzecchi","1:43.321"],
+                ["Jorge Martín","1:43.401"],
+                ["Pedro Acosta","1:43.501"]
+            ],
+
+            FP3:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            QUALIFYING:[
+                ["Jorge Martín","1:42.371"],
+                ["Marc Márquez","1:42.481"],
+                ["Pedro Acosta","1:42.493"]
+            ],
+
+            POLE:{
+                driver:"Jorge Martín",
+                time:"1:42.371"
+            }
+
+        },
+
+        lastRace:{
+
+            name:"AUSTRIAN GP",
+
+            info:"Spielberg<br>18–20 September 2026",
+
+            round:"ROUND 15",
+
+            podium:[
+                ["Pedro Acosta","—"],
+                ["Jorge Martín","—"],
+                ["Marco Bezzecchi","—"]
+            ]
+
+        },
+
+        nextEvent:{
+
+            title:"CURRENT EVENT",
+
+            name:"JAPAN GP",
+
+            info:"Mobility Resort Motegi<br>02–04 October 2026",
+
+            round:"ROUND 16",
+
+            status:"WEEKEND ACTIVE"
+
+        },
+
+        championship:{
+
+    leader:"Jorge Martín",
+
+    points:"313 PTS"
+
+},
+       standings:[
+
+    ["Jorge Martín","Aprilia Racing","313"],
+    ["Marc Márquez","Ducati Lenovo Team","306"],
+    ["Marco Bezzecchi","Aprilia Racing","268"],
+    ["Pedro Acosta","Red Bull KTM Factory Racing","234"],
+    ["Fabio Di Giannantonio","Pertamina VR46 Racing","230"],
+    ["Ai Ogura","Trackhouse MotoGP","227"],
+    ["Raúl Fernández","Trackhouse MotoGP","205"],
+    ["Álex Márquez","BK8 Gresini Racing","158"],
+    ["Francesco Bagnaia","Ducati Lenovo Team","156"],
+    ["Fermín Aldeguer","BK8 Gresini Racing","115"]
+
+],
+        results:[
+
+            ["Marc Márquez","12"],
+            ["Diogo Moreira","9"],
+            ["Jorge Martín","7"],
+            ["Enea Bastianini","6"],
+            ["Ai Ogura","5"]
+
+        ],
+
+        fastest:{
+
+            event:"JAPAN GP • QUALIFYING",
+
+            driver:"Jorge Martín",
+
+            time:"1:42.371",
+
+            team:"Aprilia • Pole"
+
+        },
+
+        secondary:{
+
+            label:"LAST SPRINT WINNER",
+
+            title:"Marc Márquez",
+
+            subtitle:"Ducati • 12 PTS"
+
+        }
+
+    },
+
+
+    wec: {
+
+        name:"WEC",
+
+        weekendLabel:"FUJI • 6 HOURS",
+
+        lastUpdated:"03 October 2026",
+
+        sessions:{
+
+            FP1:[
+                ["Toyota #8","—"],
+                ["Alpine #36","—"],
+                ["BMW #15","—"]
+            ],
+
+            FP2:[
+                ["Toyota #8","—"],
+                ["Alpine #36","—"],
+                ["BMW #15","—"]
+            ],
+
+            FP3:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            QUALIFYING:[
+                ["UPCOMING","—"],
+                ["UPCOMING","—"],
+                ["UPCOMING","—"]
+            ],
+
+            POLE:{
+                driver:"UPCOMING",
+                time:"Qualifying result"
+            }
+
+        },
+
+        lastRace:{
+
+            name:"6 HOURS OF FUJI",
+
+            info:"Fuji Speedway<br>25–27 September 2026",
+
+            round:"FUJI",
+
+            podium:[
+                ["Toyota #8","Toyota"],
+                ["Alpine #36","Alpine"],
+                ["BMW #15","BMW"]
+            ]
+
+        },
+
+        nextEvent:{
+
+            title:"NEXT EVENT",
+
+            name:"6 HOURS OF BARCELONA",
+
+            info:"Circuit de Barcelona-Catalunya<br>16–18 October 2026",
+
+            round:"ROUND 7",
+
+            status:"UPCOMING"
+
+        },
+
+        championship:{
+
+            leader:"Toyota",
+
+            points:"169 PTS"
+
+        },
+
+        standings:[
+
+            ["Toyota","Manufacturer","169"],
+            ["BMW","Manufacturer","146"],
+            ["Ferrari","Manufacturer","115"],
+            ["Alpine","Manufacturer","96"],
+            ["Cadillac","Manufacturer","96"],
+            ["Aston Martin","Manufacturer","54"],
+            ["Peugeot","Manufacturer","24"],
+            ["Genesis","Manufacturer","12"]
+
+        ],
+
+        results:[
+
+            ["Toyota #8","Winner"],
+            ["Alpine #36","P2"],
+            ["BMW #15","P3"]
+
+        ],
+
+        fastest:{
+
+            event:"6 HOURS OF FUJI",
+
+            driver:"NOT ADDED",
+
+            time:"—",
+
+            team:"Add fastest lap"
+
+        },
+
+        secondary:{
+
+            label:"LAST RACE WINNER",
+
+            title:"Toyota #8",
+
+            subtitle:"Overall Winner"
+
+        }
+
+    }
+
+};
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function escapeHTML(value){
+
+    if(value === null || value === undefined){
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =========================================================
+   SESSION HTML
+========================================================= */
+
+function sessionHTML(label,rows){
+
+    const isUpcoming =
+        rows.every(
+            row =>
+                row[0] === "UPCOMING" ||
+                row[0] === "NOT ADDED"
+        );
+
+    return `
+
+        <div class="session-box ${isUpcoming ? "session-upcoming" : ""}">
+
+            <div class="session-label">
+                ${escapeHTML(label)}
+            </div>
+
+            ${rows.map((row,index)=>`
+
+                <div class="session-result">
+
+                    <span class="session-pos">
+                        P${index + 1}
+                    </span>
+
+                    <span class="session-driver">
+                        ${escapeHTML(row[0])}
+                    </span>
+
+                    <span class="session-time">
+                        ${escapeHTML(row[1])}
+                    </span>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   BUILD SERIES PAGE
+========================================================= */
+
+function buildSeriesPage(key){
+
+    const data =
+        seriesData[key];
+
+    return `
+
+        <section
+            class="series-page ${key === "f1" ? "active" : ""}"
+            id="${key}"
+        >
+
+            <div class="grid">
+
+
+                <div class="card sessions-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            LATEST WEEKEND • SESSION RESULTS
+                        </h3>
+
+                        <span>
+                            ${escapeHTML(data.weekendLabel)}
+                        </span>
+
+                    </div>
+
+                    <div class="session-grid">
+
+                        ${sessionHTML(
+                            "FP1",
+                            data.sessions.FP1
+                        )}
+
+                        ${sessionHTML(
+                            "FP2",
+                            data.sessions.FP2
+                        )}
+
+                        ${sessionHTML(
+                            "FP3",
+                            data.sessions.FP3
+                        )}
+
+                        ${sessionHTML(
+                            "QUALIFYING",
+                            data.sessions.QUALIFYING
+                        )}
+
+                        <div class="session-box pole-box">
+
+                            <div class="session-label">
+                                POLE POSITION
+                            </div>
+
+                            <div class="session-driver">
+                                ${escapeHTML(
+                                    data.sessions.POLE.driver
+                                )}
+                            </div>
+
+                            <div class="session-time">
+                                ${escapeHTML(
+                                    data.sessions.POLE.time
+                                )}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card last-race">
+
+                    <div class="card-title">
+
+                        <h3>
+                            LAST RACE
+                        </h3>
+
+                        <span>
+                            ${escapeHTML(
+                                data.lastRace.round
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="event-name">
+                        ${escapeHTML(
+                            data.lastRace.name
+                        )}
+                    </div>
+
+                    <div class="event-info">
+                        ${data.lastRace.info}
+                    </div>
+
+                    <div class="podium">
+
+                        ${data.lastRace.podium.map((driver,index)=>`
+
+                            <div class="podium-item">
+
+                                <div class="podium-pos">
+                                    P${index + 1}
+                                </div>
+
+                                <div class="podium-name">
+                                    ${escapeHTML(driver[0])}
+                                </div>
+
+                                <div class="podium-team">
+                                    ${escapeHTML(driver[1])}
+                                </div>
+
+                            </div>
+
+                        `).join("")}
+
+                    </div>
+
+                </div>
+
+
+                <div class="card next-event">
+
+                    <div class="card-title">
+
+                        <h3>
+                            ${escapeHTML(
+                                data.nextEvent.title
+                            )}
+                        </h3>
+
+                        <span>
+                            ${escapeHTML(
+                                data.nextEvent.round
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="event-name">
+                        ${escapeHTML(
+                            data.nextEvent.name
+                        )}
+                    </div>
+
+                    <div class="event-info">
+                        ${data.nextEvent.info}
+                    </div>
+
+                    <div class="status ${
+                        data.nextEvent.status.includes("ACTIVE")
+                        ? "live"
+                        : ""
+                    }">
+
+                        ${escapeHTML(
+                            data.nextEvent.status
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <div class="card championship">
+
+                    <div class="card-title">
+
+                        <h3>
+                            CHAMPIONSHIP
+                        </h3>
+
+                        <span>
+                            LEADER
+                        </span>
+
+                    </div>
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            LEADER
+                        </div>
+
+                        <div class="stat-value">
+                            ${escapeHTML(
+                                data.championship.leader
+                            )}
+                        </div>
+
+                    </div>
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            POINTS
+                        </div>
+
+                        <div class="highlight">
+                            ${escapeHTML(
+                                data.championship.points
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card standings-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            ${escapeHTML(
+                                data.name
+                            )} CHAMPIONSHIP
+                        </h3>
+
+                        <span>
+                            TOP ${data.standings.length}
+                        </span>
+
+                    </div>
+
+                    <table class="table">
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Driver / Car</th>
+                                <th>Team</th>
+                                <th>Pts</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${data.standings.map((row,index)=>`
+
+                                <tr>
+
+                                    <td class="pos">
+                                        ${index + 1}
+                                    </td>
+
+                                    <td>
+                                        ${escapeHTML(row[0])}
+                                    </td>
+
+                                    <td>
+                                        ${escapeHTML(row[1])}
+                                    </td>
+
+                                    <td class="points">
+                                        ${escapeHTML(row[2])}
+                                    </td>
+
+                                </tr>
+
+                            `).join("")}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div class="card results-card">
+
+                    <div class="card-title">
+
+                        <h3>
+                            LAST RACE RESULT
+                        </h3>
+
+                        <span>
+                            TOP ${data.results.length}
+                        </span>
+
+                    </div>
+
+                    <table class="table">
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Driver / Car</th>
+                                <th>Result</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${data.results.map((row,index)=>`
+
+                                <tr>
+
+                                    <td class="pos">
+                                        ${index + 1}
+                                    </td>
+
+                                    <td>
+                                        ${escapeHTML(row[0])}
+                                    </td>
+
+                                    <td class="points">
+                                        ${escapeHTML(row[1])}
+                                    </td>
+
+                                </tr>
+
+                            `).join("")}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div class="card fastest">
+
+                    <div class="card-title">
+
+                        <h3>
+                            FASTEST LAP
+                        </h3>
+
+                        <span>
+                            ${escapeHTML(
+                                data.fastest.event
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="stat">
+
+                        <div class="stat-label">
+                            DRIVER
+                        </div>
+
+                        <div class="stat-value">
+                            ${escapeHTML(
+                                data.fastest.driver
+                            )}
+                        </div>
+
+                    </div>
+
+                    <div class="highlight">
+                        ${escapeHTML(
+                            data.fastest.time
+                        )}
+                    </div>
+
+                    <div class="muted">
+                        ${escapeHTML(
+                            data.fastest.team
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="card secondary">
+
+                    <div class="card-title">
+
+                        <h3>
+                            ${escapeHTML(
+                                data.secondary.label
+                            )}
+                        </h3>
+
+                        <span>
+                            LATEST
+                        </span>
+
+                    </div>
+
+                    <div class="highlight">
+                        ${escapeHTML(
+                            data.secondary.title
+                        )}
+                    </div>
+
+                    <div class="muted">
+                        ${escapeHTML(
+                            data.secondary.subtitle
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="card about">
+
+                    <div class="card-title">
+
+                        <h3>
+                            UPDATE SYSTEM
+                        </h3>
+
+                        <span>
+                            MANUAL
+                        </span>
+
+                    </div>
+
+                    <p class="manual-note">
+
+                        This series is running in manual mode.
+                        No broken API, no fake live feed and no
+                        automatic data guessing.
+
+                        When a new session, race, fastest lap or
+                        championship result happens, edit the
+                        ${escapeHTML(data.name)} data in the
+                        JavaScript section at the top of the file.
+
+                    </p>
+
+                    <div class="data-date">
+                        DATA UPDATED: ${escapeHTML(
+                            data.lastUpdated
+                        )}
+                    </div>
+
+                    <div class="status ok">
+                        ✓ MANUAL DATA READY
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   RENDER ALL PAGES
+========================================================= */
+
+function renderAllSeries(){
+
+    const container =
+        document.getElementById("pages");
+
+    if(!container){
+        return;
+    }
+
+    container.innerHTML =
+        Object.keys(seriesData)
+            .map(
+                key =>
+                    buildSeriesPage(key)
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+let currentSeries =
+    "f1";
+
+
+function showSeries(series,button){
+
+    currentSeries =
+        series;
+
+    document
+        .querySelectorAll(".series-page")
+        .forEach(page => {
+
+            page.classList.remove("active");
+
+        });
+
+    const page =
+        document.getElementById(series);
+
+    if(page){
+
+        page.classList.add("active");
+
+    }
+
+    document
+        .querySelectorAll(".nav button")
+        .forEach(btn => {
+
+            btn.classList.remove("active");
+
+        });
+
+    if(button){
+
+        button.classList.add("active");
+
+    }
+
+    const data =
+        seriesData[series];
+
+    if(!data){
+        return;
+    }
+
+    const heroSeries =
+        document.getElementById("heroSeries");
+
+    if(heroSeries){
+
+        heroSeries.textContent =
+            data.name;
+
+    }
+
+    const updateButton =
+        document.getElementById("heroUpdate");
+
+    if(updateButton){
+
+        updateButton.disabled =
+            false;
+
+        updateButton.textContent =
+            "↻ UPDATE " + data.name;
+
+        updateButton.onclick =
+            function(){
+
+                updateSeries(series);
+
+            };
+
+    }
+
+}
+
+
+/* =========================================================
+   MANUAL UPDATE BUTTON
+========================================================= */
+
+async function updateSeries(series){
+
+    const data =
+        seriesData[series];
+
+    if(!data){
+        return;
+    }
+
+    const button =
+        document.getElementById("heroUpdate");
+
+    if(!button){
+        return;
+    }
+
+    const originalText =
+        "↻ UPDATE " + data.name;
+
+    button.disabled =
+        true;
+
+    button.textContent =
+        "↻ REFRESHING...";
+
+    await new Promise(
+        resolve =>
+            setTimeout(resolve,400)
+    );
+
+    const oldPage =
+        document.getElementById(series);
+
+    const temp =
+        document.createElement("div");
+
+    temp.innerHTML =
+        buildSeriesPage(series);
+
+    const newPage =
+        temp.firstElementChild;
+
+    if(oldPage && newPage){
+
+        oldPage.replaceWith(
+            newPage
+        );
+
+        newPage.classList.add("active");
+
+    }
+
+    const now =
+        new Date();
+
+    const formattedTime =
+        now.toLocaleTimeString(
+            "en-GB",
+            {
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit"
+            }
+        );
+
+    const formattedDate =
+        now.toLocaleDateString(
+            "en-GB",
+            {
+                day:"2-digit",
+                month:"short",
+                year:"numeric"
+            }
+        );
+
+    const sync =
+        document.getElementById("syncTime");
+
+    if(sync){
+
+        sync.textContent =
+            "LAST REFRESH: " +
+            formattedDate +
+            " • " +
+            formattedTime;
+
+    }
+
+    button.textContent =
+        "✓ " + data.name + " UPDATED";
+
+    button.disabled =
+        false;
+
+    setTimeout(
+        ()=>{
+            button.textContent =
+                originalText;
+        },
+        1800
+    );
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    ()=>{
+
+        renderAllSeries();
+
+        showSeries(
+            "f1",
+            document.querySelector(
+                ".nav button.active"
+            )
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
