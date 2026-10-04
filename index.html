@@ -2005,19 +2005,24 @@ function showSeries(series,button){
 
 async function updateSeries(series) {
 
-  const button = document.getElementById("heroUpdate");
+  const button =
+    document.getElementById("heroUpdate");
 
   if (!button) {
     return;
   }
 
-  /* =======================================================
-     NON-F1 SERIES
-  ======================================================= */
+  /*
+  ==========================================
+  NON-F1 SERIES
+  ==========================================
+  */
 
   if (series !== "f1") {
 
-    button.textContent = "↻ UPDATING...";
+    button.textContent =
+      "↻ UPDATING...";
+
     button.disabled = true;
 
     await new Promise(resolve =>
@@ -2028,201 +2033,218 @@ async function updateSeries(series) {
 
     showSeries(
       series,
-      document.querySelector(".nav button.active")
+      document.querySelector(
+        ".nav button.active"
+      )
     );
 
-    button.textContent = "✓ UPDATED";
+    button.textContent =
+      "✓ UPDATED";
 
     setTimeout(() => {
+
       button.textContent =
-        "↻ UPDATE " + series.toUpperCase();
+        "↻ UPDATE " +
+        series.toUpperCase();
 
       button.disabled = false;
+
     }, 1500);
 
     return;
   }
 
+  /*
+  ==========================================
+  START F1 LIVE UPDATE
+  ==========================================
+  */
 
-  /* =======================================================
-     LIVE F1 UPDATE
-  ======================================================= */
+  button.textContent =
+    "↻ FETCHING F1...";
 
-  button.textContent = "↻ FETCHING F1...";
   button.disabled = true;
 
   try {
 
-    const response = await fetch(
-      "https://motorsport-tracker-api.aaravboii02.workers.dev/f1",
-      {
-        cache: "no-store"
-      }
-    );
+    const response =
+      await fetch(
+        "https://motorsport-tracker-api.aaravboii02.workers.dev/f1",
+        {
+          method: "GET",
+          cache: "no-store"
+        }
+      );
 
     if (!response.ok) {
+
       throw new Error(
-        "API request failed: " + response.status
+        "Worker request failed: " +
+        response.status
       );
+
     }
 
-    const live = await response.json();
+    const live =
+      await response.json();
 
     if (live.error) {
+
       throw new Error(
-        live.message || "Live API error"
+        live.message ||
+        "Live data error"
       );
+
     }
 
+    /*
+    ========================================
+    CHAMPIONSHIP
+    ========================================
+    */
 
-    /* =====================================================
-       HELPERS
-    ===================================================== */
+    if (
+      live.championship &&
+      Array.isArray(
+        live.championship.standings
+      )
+    ) {
 
-    function driverName(driver) {
+      const standings =
+        live.championship.standings;
 
-      if (!driver) {
-        return "—";
+      if (standings.length) {
+
+        /*
+        Championship leader
+        */
+
+        seriesData.f1.championship = {
+
+          leader:
+            standings[0].driver,
+
+          points:
+            standings[0].points +
+            " PTS"
+
+        };
+
+        /*
+        FULL LEADERBOARD
+        */
+
+        seriesData.f1.standings =
+          standings
+            .slice(0, 10)
+            .map(driver => [
+
+              driver.driver,
+
+              driver.team,
+
+              driver.points
+
+            ]);
+
       }
 
-      return [
-        driver.givenName,
-        driver.familyName
-      ]
-        .filter(Boolean)
-        .join(" ");
-
     }
 
+    /*
+    ========================================
+    LAST RACE
+    ========================================
+    */
 
-    function teamName(constructor) {
-
-      return constructor?.name || "—";
-
-    }
-
-
-    /* =====================================================
-       CHAMPIONSHIP STANDINGS
-    ===================================================== */
-
-    const standings =
-      live.standings?.MRData
-        ?.StandingsTable
-        ?.StandingsLists?.[0]
-        ?.DriverStandings || [];
-
-    if (standings.length) {
-
-      seriesData.f1.championship = {
-
-        leader:
-          driverName(
-            standings[0].Driver
-          ),
-
-        points:
-          standings[0].points + " PTS"
-
-      };
-
-
-      seriesData.f1.standings =
-        standings
-          .slice(0, 10)
-          .map(item => [
-
-            driverName(
-              item.Driver
-            ),
-
-            teamName(
-              item.Constructors?.[0]
-            ),
-
-            item.points
-
-          ]);
-
-    }
-
-
-    /* =====================================================
-       LAST RACE
-    ===================================================== */
-
-    const races =
-      live.results?.MRData
-        ?.RaceTable
-        ?.Races || [];
-
-    if (races.length) {
+    if (live.lastRace) {
 
       const race =
-        races[0];
-
-      const results =
-        race.Results || [];
-
+        live.lastRace;
 
       seriesData.f1.lastRace = {
 
         name:
-          race.raceName ||
+          race.name ||
           "LATEST RACE",
 
         info:
-          (race.Circuit?.circuitName || "—") +
+
+          (
+            race.circuit ||
+            "—"
+          ) +
+
           "<br>" +
-          (race.date || "—"),
+
+          (
+            race.date ||
+            "—"
+          ),
 
         round:
+
           "ROUND " +
-          (race.round || "—"),
+
+          (
+            race.round ||
+            "—"
+          ),
 
         podium:
-          results
-            .slice(0, 3)
-            .map(result => [
 
-              driverName(
-                result.Driver
-              ),
+          Array.isArray(
+            race.podium
+          )
 
-              teamName(
-                result.Constructor
-              )
+            ? race.podium
+                .slice(0, 3)
+                .map(driver => [
 
-            ])
+                  driver.driver,
+
+                  driver.team
+
+                ])
+
+            : []
 
       };
 
+      /*
+      FULL RACE RESULTS
+      */
 
-      /* =================================================
-         LAST RACE RESULTS
-      ================================================= */
+      if (
+        Array.isArray(
+          race.results
+        )
+      ) {
 
-      seriesData.f1.results =
-        results
-          .slice(0, 5)
-          .map(result => [
+        seriesData.f1.results =
+          race.results
+            .slice(0, 5)
+            .map(result => [
 
-            driverName(
-              result.Driver
-            ),
+              result.driver,
 
-            result.positionText ||
-            result.position ||
-            "—"
+              result.position
 
-          ]);
+            ]);
 
+      }
 
-      /* =================================================
-         LAST RACE WINNER
-      ================================================= */
+      /*
+      LAST RACE WINNER
+      */
 
-      if (results[0]) {
+      if (
+        race.podium &&
+        race.podium[0]
+      ) {
+
+        const winner =
+          race.podium[0];
 
         seriesData.f1.secondary = {
 
@@ -2230,87 +2252,51 @@ async function updateSeries(series) {
             "LAST RACE WINNER",
 
           title:
-            driverName(
-              results[0].Driver
-            ),
+            winner.driver,
 
           subtitle:
-            teamName(
-              results[0].Constructor
-            ) +
+            winner.team +
             " • P1"
 
         };
 
       }
 
-
-      /* =================================================
-         FASTEST LAP
-      ================================================= */
-
-      let fastest =
-        results.find(
-          result =>
-            String(
-              result.FastestLap?.rank
-            ) === "1"
-        );
-
-
-      if (!fastest) {
-
-        const withLaps =
-          results.filter(
-            result =>
-              result.FastestLap?.Time?.millis
-          );
-
-
-        withLaps.sort(
-          (a, b) =>
-            Number(
-              a.FastestLap.Time.millis
-            ) -
-            Number(
-              b.FastestLap.Time.millis
-            )
-        );
-
-
-        fastest =
-          withLaps[0];
-
-      }
-
+      /*
+      FASTEST LAP
+      */
 
       if (
-        fastest &&
-        fastest.FastestLap
+        race.fastestLap
       ) {
+
+        const fastest =
+          race.fastestLap;
 
         seriesData.f1.fastest = {
 
           event:
-            race.raceName ||
+            race.name ||
             "LATEST RACE",
 
           driver:
-            driverName(
-              fastest.Driver
-            ),
+            fastest.driver ||
+            "—",
 
           time:
-            fastest.FastestLap.Time?.time ||
+            fastest.time ||
             "—",
 
           team:
-            teamName(
-              fastest.Constructor
-            ) +
-            " • Lap " +
             (
-              fastest.FastestLap.lap ||
+              fastest.team ||
+              "—"
+            ) +
+
+            " • Lap " +
+
+            (
+              fastest.lap ||
               "—"
             )
 
@@ -2320,54 +2306,54 @@ async function updateSeries(series) {
 
     }
 
+    /*
+    ========================================
+    QUALIFYING
+    ========================================
+    */
 
-    /* =====================================================
-       QUALIFYING
-    ===================================================== */
-
-    const qualifyingRaces =
-      live.qualifying?.MRData
-        ?.RaceTable
-        ?.Races || [];
-
-    if (qualifyingRaces.length) {
+    if (
+      live.qualifying
+    ) {
 
       const qualifying =
-        qualifyingRaces[0]
-          .QualifyingResults || [];
+        live.qualifying;
 
+      if (
+        Array.isArray(
+          qualifying.top3
+        ) &&
+        qualifying.top3.length
+      ) {
 
-      seriesData.f1.sessions.QUALIFYING =
-        qualifying
-          .slice(0, 3)
-          .map(result => [
+        seriesData.f1.sessions.QUALIFYING =
+          qualifying.top3
+            .slice(0, 3)
+            .map(driver => [
 
-            driverName(
-              result.Driver
-            ),
+              driver.driver,
 
-            result.Q3 ||
-            result.Q2 ||
-            result.Q1 ||
-            "—"
+              driver.finalTime
 
-          ]);
+            ]);
 
+      }
 
-      if (qualifying[0]) {
+      /*
+      POLE POSITION
+      */
+
+      if (
+        qualifying.pole
+      ) {
 
         seriesData.f1.sessions.POLE = {
 
           driver:
-            driverName(
-              qualifying[0].Driver
-            ),
+            qualifying.pole.driver,
 
           time:
-            qualifying[0].Q3 ||
-            qualifying[0].Q2 ||
-            qualifying[0].Q1 ||
-            "—"
+            qualifying.pole.time
 
         };
 
@@ -2375,40 +2361,18 @@ async function updateSeries(series) {
 
     }
 
+    /*
+    ========================================
+    NEXT RACE
+    ========================================
+    */
 
-    /* =====================================================
-       NEXT EVENT
-    ===================================================== */
-
-    const schedule =
-      live.schedule?.MRData
-        ?.RaceTable
-        ?.Races || [];
-
-
-    const now =
-      new Date();
-
-
-    const upcoming =
-      schedule.filter(race => {
-
-        if (!race.date) {
-          return false;
-        }
-
-        return new Date(
-          race.date + "T23:59:59"
-        ) >= now;
-
-      });
-
-
-    if (upcoming.length) {
+    if (
+      live.nextRace
+    ) {
 
       const next =
-        upcoming[0];
-
+        live.nextRace;
 
       seriesData.f1.nextEvent = {
 
@@ -2416,24 +2380,42 @@ async function updateSeries(series) {
           "NEXT EVENT",
 
         name:
-          next.raceName ||
+          next.name ||
           "NEXT RACE",
 
         info:
-          (next.Circuit?.circuitName || "—") +
+
+          (
+            next.circuit ||
+            "—"
+          ) +
+
           "<br>" +
-          (next.date || "—") +
+
+          (
+            next.date ||
+            "—"
+          ) +
+
           (
             next.time
               ? " • " +
-                next.time.slice(0, 5) +
+                next.time.slice(
+                  0,
+                  5
+                ) +
                 " UTC"
               : ""
           ),
 
         round:
+
           "ROUND " +
-          (next.round || "—"),
+
+          (
+            next.round ||
+            "—"
+          ),
 
         status:
           "UPCOMING"
@@ -2442,41 +2424,51 @@ async function updateSeries(series) {
 
     }
 
-
-    /* =====================================================
-       LAST UPDATED
-    ===================================================== */
+    /*
+    ========================================
+    LAST UPDATED
+    ========================================
+    */
 
     seriesData.f1.lastUpdated =
-      new Date().toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
+      live.updatedAt
+        ? new Date(
+            live.updatedAt
+          ).toLocaleDateString(
+            "en-GB",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            }
+          )
+        : new Date()
+            .toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              }
+            );
 
-
-    /* =====================================================
-       REBUILD F1 PAGE
-    ===================================================== */
+    /*
+    ========================================
+    REBUILD F1 PAGE
+    ========================================
+    */
 
     const oldPage =
       document.getElementById("f1");
 
-
     const temp =
       document.createElement("div");
-
 
     temp.innerHTML =
       buildSeriesPage("f1");
 
-
     const newPage =
       temp.firstElementChild;
-
 
     if (
       oldPage &&
@@ -2493,25 +2485,23 @@ async function updateSeries(series) {
 
     }
 
-
-    /* =====================================================
-       SUCCESS
-    ===================================================== */
+    /*
+    ========================================
+    SUCCESS
+    ========================================
+    */
 
     button.textContent =
       "✓ F1 UPDATED";
-
 
     setTimeout(() => {
 
       button.textContent =
         "↻ UPDATE F1";
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
     }, 2000);
-
 
   } catch (error) {
 
@@ -2520,21 +2510,17 @@ async function updateSeries(series) {
       error
     );
 
-
     button.textContent =
       "✕ UPDATE FAILED";
-
 
     setTimeout(() => {
 
       button.textContent =
         "↻ UPDATE F1";
 
-      button.disabled =
-        false;
+      button.disabled = false;
 
     }, 2500);
-
 
     alert(
       "F1 update failed.\n\n" +
