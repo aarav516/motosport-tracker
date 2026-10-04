@@ -2003,108 +2003,297 @@ function showSeries(series,button){
    MANUAL UPDATE BUTTON
 ========================================================= */
 
-async function updateSeries(series){
+async function updateSeries(series) {
+  const button = document.getElementById("heroUpdate");
 
-    const data =
-        seriesData[series];
+  if (series !== "f1") {
+    button.textContent = "↻ UPDATING...";
 
-    if(!data){
-        return;
-    }
+    await new Promise(resolve => setTimeout(resolve, 400));
 
-    const button =
-        document.getElementById("heroUpdate");
+    renderAllSeries();
 
-    if(!button){
-        return;
-    }
-
-    const originalText =
-        "↻ UPDATE " + data.name;
-
-    button.disabled =
-        true;
-
-    button.textContent =
-        "↻ REFRESHING...";
-
-    await new Promise(
-        resolve =>
-            setTimeout(resolve,400)
+    showSeries(
+      series,
+      document.querySelector(".nav button.active")
     );
+
+    button.textContent = "✓ UPDATED";
+
+    setTimeout(() => {
+      button.textContent = "↻ UPDATE " + series.toUpperCase();
+    }, 1500);
+
+    return;
+  }
+
+  button.textContent = "↻ FETCHING F1...";
+
+  try {
+    const response = await fetch(
+      "PASTE-YOUR-CLOUDFLARE-URL-HERE",
+      {
+        cache: "no-store"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("API request failed: " + response.status);
+    }
+
+    const live = await response.json();
+
+    if (live.error) {
+      throw new Error(live.message || "Live API error");
+    }
+
+    function driverName(driver) {
+      if (!driver) return "—";
+      return [driver.givenName, driver.familyName]
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    function teamName(constructor) {
+      return constructor?.name || "—";
+    }
+
+    /* =========================
+       CHAMPIONSHIP STANDINGS
+    ========================= */
+
+    const standings =
+      live.standings?.MRData?.StandingsTable
+        ?.StandingsLists?.[0]
+        ?.DriverStandings || [];
+
+    if (standings.length) {
+      seriesData.f1.championship = {
+        leader: driverName(standings[0].Driver),
+        points: standings[0].points + " PTS"
+      };
+
+      seriesData.f1.standings = standings
+        .slice(0, 10)
+        .map(item => [
+          driverName(item.Driver),
+          teamName(item.Constructors?.[0]),
+          item.points
+        ]);
+    }
+
+    /* =========================
+       LAST RACE RESULTS
+    ========================= */
+
+    const races =
+      live.results?.MRData?.RaceTable?.Races || [];
+
+    if (races.length) {
+      const race = races[0];
+      const results = race.Results || [];
+
+      seriesData.f1.lastRace = {
+        name: race.raceName || "LATEST RACE",
+        info:
+          (race.Circuit?.circuitName || "—") +
+          "<br>" +
+          (race.date || "—"),
+        round: "ROUND " + (race.round || "—"),
+        podium: results
+          .slice(0, 3)
+          .map(result => [
+            driverName(result.Driver),
+            teamName(result.Constructor)
+          ])
+      };
+
+      seriesData.f1.results = results
+        .slice(0, 5)
+        .map(result => [
+          driverName(result.Driver),
+          result.positionText ||
+            result.position ||
+            "—"
+        ]);
+
+      if (results[0]) {
+        seriesData.f1.secondary = {
+          label: "LAST RACE WINNER",
+          title: driverName(results[0].Driver),
+          subtitle:
+            teamName(results[0].Constructor) +
+            " • P1"
+        };
+      }
+
+      /* =========================
+         FASTEST LAP
+      ========================= */
+
+      let fastest =
+        results.find(
+          result =>
+            String(result.FastestLap?.rank) === "1"
+        );
+
+      if (!fastest) {
+        const withLaps = results.filter(
+          result =>
+            result.FastestLap?.Time?.millis
+        );
+
+        withLaps.sort(
+          (a, b) =>
+            Number(a.FastestLap.Time.millis) -
+            Number(b.FastestLap.Time.millis)
+        );
+
+        fastest = withLaps[0];
+      }
+
+      if (fastest?.FastestLap) {
+        seriesData.f1.fastest = {
+          event: race.raceName || "LATEST RACE",
+          driver: driverName(fastest.Driver),
+          time:
+            fastest.FastestLap.Time?.time || "—",
+          team:
+            teamName(fastest.Constructor) +
+            " • Lap " +
+            (fastest.FastestLap.lap || "—")
+        };
+      }
+    }
+
+    /* =========================
+       QUALIFYING
+    ========================= */
+
+    const qualifyingRaces =
+      live.qualifying?.MRData?.RaceTable?.Races || [];
+
+    if (qualifyingRaces.length) {
+      const qualifying =
+        qualifyingRaces[0].QualifyingResults || [];
+
+      seriesData.f1.sessions.QUALIFYING =
+        qualifying
+          .slice(0, 3)
+          .map(result => [
+            driverName(result.Driver),
+            result.Q3 ||
+              result.Q2 ||
+              result.Q1 ||
+              "—"
+          ]);
+
+      if (qualifying[0]) {
+        seriesData.f1.sessions.POLE = {
+          driver: driverName(qualifying[0].Driver),
+          time:
+            qualifying[0].Q3 ||
+            qualifying[0].Q2 ||
+            qualifying[0].Q1 ||
+            "—"
+        };
+      }
+    }
+
+    /* =========================
+       NEXT EVENT
+    ========================= */
+
+    const schedule =
+      live.schedule?.MRData?.RaceTable?.Races || [];
+
+    const now = new Date();
+
+    const upcoming = schedule.filter(race => {
+      if (!race.date) return false;
+
+      return new Date(
+        race.date + "T23:59:59"
+      ) >= now;
+    });
+
+    if (upcoming.length) {
+      const next = upcoming[0];
+
+      seriesData.f1.nextEvent = {
+        title: "NEXT EVENT",
+        name: next.raceName || "NEXT RACE",
+        info:
+          (next.Circuit?.circuitName || "—") +
+          "<br>" +
+          (next.date || "—") +
+          (
+            next.time
+              ? " • " +
+                next.time.slice(0, 5) +
+                " UTC"
+              : ""
+          ),
+        round: "ROUND " + (next.round || "—"),
+        status: "UPCOMING"
+      };
+    }
+
+    /* =========================
+       LAST UPDATED
+    ========================= */
+
+    seriesData.f1.lastUpdated =
+      new Date().toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+    /* =========================
+       REBUILD F1 PAGE
+    ========================= */
 
     const oldPage =
-        document.getElementById(series);
+      document.getElementById("f1");
 
     const temp =
-        document.createElement("div");
+      document.createElement("div");
 
     temp.innerHTML =
-        buildSeriesPage(series);
+      buildSeriesPage("f1");
 
     const newPage =
-        temp.firstElementChild;
+      temp.firstElementChild;
 
-    if(oldPage && newPage){
-
-        oldPage.replaceWith(
-            newPage
-        );
-
-        newPage.classList.add("active");
-
+    if (oldPage && newPage) {
+      oldPage.replaceWith(newPage);
+      newPage.classList.add("active");
     }
 
-    const now =
-        new Date();
+    button.textContent = "✓ F1 UPDATED";
 
-    const formattedTime =
-        now.toLocaleTimeString(
-            "en-GB",
-            {
-                hour:"2-digit",
-                minute:"2-digit",
-                second:"2-digit"
-            }
-        );
+    setTimeout(() => {
+      button.textContent = "↻ UPDATE F1";
+    }, 2000);
 
-    const formattedDate =
-        now.toLocaleDateString(
-            "en-GB",
-            {
-                day:"2-digit",
-                month:"short",
-                year:"numeric"
-            }
-        );
+  } catch (error) {
+    console.error("F1 UPDATE ERROR:", error);
 
-    const sync =
-        document.getElementById("syncTime");
+    button.textContent = "✕ UPDATE FAILED";
 
-    if(sync){
+    setTimeout(() => {
+      button.textContent = "↻ UPDATE F1";
+    }, 2500);
 
-        sync.textContent =
-            "LAST REFRESH: " +
-            formattedDate +
-            " • " +
-            formattedTime;
-
-    }
-
-    button.textContent =
-        "✓ " + data.name + " UPDATED";
-
-    button.disabled =
-        false;
-
-    setTimeout(
-        ()=>{
-            button.textContent =
-                originalText;
-        },
-        1800
+    alert(
+      "F1 update failed.\n\n" +
+      error.message
     );
-
+  }
 }
 
 
